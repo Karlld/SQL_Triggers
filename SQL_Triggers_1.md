@@ -67,16 +67,14 @@ SELECT * from audit;
 | 1	           | 2025-03-30 12:36:07.766638+01  |
 | 2	           | 2025-03-30 12:37:14.842566+01  |
 
-
+By adding a new column to the audit table and modifying the auditlog function the trigger can now log which user made the input into the customer table.
 
 ```sql
 
 ALTER TABLE audit
 ADD COLUMN inserted_by VARCHAR(255);
 
-```
 
-```sql
 
 CREATE OR REPLACE FUNCTION auditlog() 
 RETURNS TRIGGER AS $$
@@ -90,9 +88,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-```
 
-```sql
 
 INSERT INTO customers (id, first_name, last_name)
 VALUES (3, 'Paul', 'Newman')
