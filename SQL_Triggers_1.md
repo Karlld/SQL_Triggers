@@ -1,5 +1,7 @@
 **SQL_Triggers_1**
 
+The following trigger creates a log of new rows added to a table.
+
 A new schema with 2 tables is created. 
 
 The first to insert very simple customer information into and the second for the trigger to log those inserts with a timestamp. 
