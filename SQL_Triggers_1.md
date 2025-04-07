@@ -12,7 +12,7 @@ CREATE SCHEMA trigger_practice;
 
 CREATE TABLE customers (id INT, first_name VARCHAR(255), last_name VARCHAR (255));
 
-CREATE TABLE audit (cutomer_id INT, entry_date VARCHAR(255));
+CREATE TABLE audit ( id INT, entry_date VARCHAR(255));
 
 ```
 
@@ -24,7 +24,7 @@ Using this function a trigger is created which is activated when data is inserte
 
 CREATE OR REPLACE FUNCTION auditlog() RETURNS TRIGGER AS $$
      BEGIN
-	    INSERT INTO audit(customer_id, entry_date) VALUES (new.id, current_timestamp);
+	    INSERT INTO audit( id, entry_date) VALUES (new.id, current_timestamp);
 		   RETURN NEW;
 		   END;
 		   $$ LANGUAGE plpgsql;
@@ -82,7 +82,7 @@ CREATE OR REPLACE FUNCTION auditlog()
 RETURNS TRIGGER AS $$
 BEGIN
    
-    INSERT INTO audit(customer_id, entry_date, inserted_by) 
+    INSERT INTO audit( id, entry_date, inserted_by) 
     VALUES (NEW.id, current_timestamp, CURRENT_USER);
     
    
@@ -93,14 +93,14 @@ $$ LANGUAGE plpgsql;
 
 
 INSERT INTO customers (id, first_name, last_name)
-VALUES (3, 'Paul', 'Newman')
+VALUES (3, 'Paul', 'Newman');
 
 ```
 
 
 ```sql
 
-SELECT * FROM customers
+SELECT * FROM customers;
 
 ```
 
@@ -112,7 +112,7 @@ SELECT * FROM customers
 
 ```sql
 
-SELECT * FROM audit
+SELECT * FROM audit;
 
 ```
 
