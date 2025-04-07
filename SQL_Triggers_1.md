@@ -24,7 +24,7 @@ Using this function a trigger is created which is activated when data is inserte
 
 CREATE OR REPLACE FUNCTION auditlog() RETURNS TRIGGER AS $$
      BEGIN
-	    INSERT INTO audit( id, entry_date) VALUES (new.id, current_timestamp);
+	    INSERT INTO audit( id, entry_date) VALUES (new.id, date_trunc('second', current_timestamp));
 		   RETURN NEW;
 		   END;
 		   $$ LANGUAGE plpgsql;
@@ -66,8 +66,8 @@ SELECT * FROM audit;
 
 |   id |         entry_date             |
 |--------------|--------------------------------|
-| 1	           | 2025-03-30 12:36:07.766638+01  |
-| 2	           | 2025-03-30 12:37:14.842566+01  |
+| 1	           | 2025-03-30 12:36:07+01  |
+| 2	           | 2025-03-30 12:37:14+01  |
 
 By adding a new column to the audit table and modifying the auditlog function the trigger can now log which user made the input into the customer table.
 
@@ -83,7 +83,7 @@ RETURNS TRIGGER AS $$
 BEGIN
    
     INSERT INTO audit( id, entry_date, inserted_by) 
-    VALUES (NEW.id, current_timestamp, CURRENT_USER);
+    VALUES (NEW.id, date_trunc('second', current_timestamp), CURRENT_USER);
     
    
     RETURN NEW;
@@ -118,9 +118,9 @@ SELECT * FROM audit;
 
 |        id   |   	    entry_date 	           |   inserted_by  |
 |---------------|--------------------------------|----------------|
-|   1	            | 2025-03-30 12:36:07.766638+01  |	       |
-|   2	          | 2025-03-30 12:38:14.842566+01 |      |
-|   3	         |  2025-03-30 12:40:38.022225+01 |   	postgres  |
+|   1	            | 2025-03-30 12:36:07+01  |	       |
+|   2	          | 2025-03-30 12:38:14+01 |      |
+|   3	         |  2025-03-30 12:40:38+01 |   	postgres  |
 
 
 
@@ -152,7 +152,7 @@ RETURNS TRIGGER AS $$
 BEGIN
 
     INSERT INTO audit (id, entry_date, inserted_by, action) 
-    VALUES (NEW.id, current_timestamp, CURRENT_USER, 'Added');
+    VALUES (NEW.id, date_trunc('second', current_timestamp), CURRENT_USER, 'Added');
 
 
     RETURN NEW;
@@ -174,7 +174,7 @@ RETURNS TRIGGER AS $$
 BEGIN
 
     INSERT INTO audit (id, entry_date, inserted_by, action) 
-    VALUES (old.id, current_timestamp, CURRENT_USER, 'Deleted');
+    VALUES (old.id, date_trunc('second', current_timestamp), CURRENT_USER, 'Deleted');
 
 
     RETURN NEW;
@@ -197,14 +197,14 @@ BEGIN
     
     IF OLD.first_name <> NEW.first_name THEN
         INSERT INTO audit (id, entry_date, inserted_by, action) 
-        VALUES (NEW.id, current_timestamp, CURRENT_USER, 
+        VALUES (NEW.id, date_trunc('second', current_timestamp), CURRENT_USER, 
                 'Changed first_name from ' || OLD.first_name || ' to ' || NEW.first_name);
     END IF;
 
     
     IF OLD.last_name <> NEW.last_name THEN
         INSERT INTO audit (id, entry_date, inserted_by, action) 
-        VALUES (NEW.id, current_timestamp, CURRENT_USER, 
+        VALUES (NEW.id, date_trunc('second', current_timestamp), CURRENT_USER, 
                 'Changed last_name from ' || OLD.last_name || ' to ' || NEW.last_name);
     END IF;
 
@@ -257,13 +257,13 @@ SELECT * FROM audit;
 
 |        id   |   	    entry_date 	           |   inserted_by  |  action    |
 |---------------|--------------------------------|----------------|--------------|
-|   1	            | 2025-03-30 12:36:07.766638+01  |	       |  |
-|   2	          | 2025-03-30 12:38:14.842566+01 |      |   |
-|   3	         |  2025-03-30 12:40:38.022225+01 |   	postgres |  |
-| 4	|  2025-04-07 17:06:40.698657+01 	| postgres |	Added  |
-| 1	| 2025-04-07 17:07:13.054073+01 	| postgres |	Deleted |
-| 4	| 2025-04-07 17:08:46.318067+01 	| postgres |	Changed first_name from Steve to Stacey |
-| 4	| 2025-04-07 17:09:33.108531+01 	| postgres |	Changed last_name from Martin to Wilson |
+|   1	            | 2025-03-30 12:36:07+01  |	       |  |
+|   2	          | 2025-03-30 12:38:14+01 |      |   |
+|   3	         |  2025-03-30 12:40:38+01 |   	postgres |  |
+| 4	|  2025-04-07 17:06:40+01 	| postgres |	Added  |
+| 1	| 2025-04-07 17:07:13+01 	| postgres |	Deleted |
+| 4	| 2025-04-07 17:08:46+01 	| postgres |	Changed first_name from Steve to Stacey |
+| 4	| 2025-04-07 17:09:33+01 	| postgres |	Changed last_name from Martin to Wilson |
 
 
 
