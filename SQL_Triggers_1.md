@@ -120,5 +120,151 @@ SELECT * FROM audit;
 |---------------|--------------------------------|----------------|
 |   1	            | 2025-03-30 12:36:07.766638+01  |	       |
 |   2	          | 2025-03-30 12:38:14.842566+01 |      |
-|   3	         |  2025-03-30 15:14:38.022225+01 |   	postgres  |
+|   3	         |  2025-03-30 12:40:38.022225+01 |   	postgres  |
+
+
+
+The audit table can be modified further to create logs for added, deleted and updated rows.
+
+To avoid any overlap in triggers,  the previous trigger and function are removed.
+
+```sql
+drop trigger trigger_example1 on customers; 
+
+drop function auditlog();
+
+```
+
+An extre column is also added to the audit table, which will log the action details of each entry e.g.  ‘deleted’.
+
+```sql
+ALTER TABLE table_name
+ADD column_name datatype;
+```
+
+
+With the following we can create a function and trigger for inserting rows;
+
+```sql
+
+CREATE OR REPLACE FUNCTION audit_insert_function() 
+RETURNS TRIGGER AS $$
+BEGIN
+
+    INSERT INTO audit (id, entry_date, inserted_by, action) 
+    VALUES (NEW.id, current_timestamp, CURRENT_USER, 'Added');
+
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE or replace TRIGGER audit_ins_trig
+    AFTER INSERT ON customers
+    FOR EACH ROW
+    EXECUTE FUNCTION audit_insert_function();
+
+```
+
+With the following we can create a function and trigger for deleting rows;
+
+```sql
+CREATE OR REPLACE FUNCTION audit_delete_function() 
+RETURNS TRIGGER AS $$
+BEGIN
+
+    INSERT INTO audit (id, entry_date, inserted_by, action) 
+    VALUES (old.id, current_timestamp, CURRENT_USER, 'Deleted');
+
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE or replace TRIGGER audit_del_trig
+    AFTER DELETE ON customers
+    FOR EACH ROW
+    EXECUTE FUNCTION audit_delete_function();
+```
+
+With the following we can create a function and trigger for updating rows;
+
+```sql
+
+CREATE OR REPLACE FUNCTION audit_change_function() 
+RETURNS TRIGGER AS $$
+BEGIN
+    
+    IF OLD.first_name <> NEW.first_name THEN
+        INSERT INTO audit (id, entry_date, inserted_by, action) 
+        VALUES (NEW.id, current_timestamp, CURRENT_USER, 
+                'Changed first_name from ' || OLD.first_name || ' to ' || NEW.first_name);
+    END IF;
+
+    
+    IF OLD.last_name <> NEW.last_name THEN
+        INSERT INTO audit (id, entry_date, inserted_by, action) 
+        VALUES (NEW.id, current_timestamp, CURRENT_USER, 
+                'Changed last_name from ' || OLD.last_name || ' to ' || NEW.last_name);
+    END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE or replace TRIGGER audit_chg_trig
+    AFTER UPDATE ON customers
+    FOR EACH ROW
+    EXECUTE FUNCTION audit_change_function();
+
+```
+
+The new triggers can be tested with the following;
+
+```sql
+
+INSERT INTO customers
+VALUES (4,’Steve’,’Martin');
+
+DELETE FROM customers 
+WHERE id = 1;
+
+UPDATE customers 
+SET first_name = 'Stacey'
+WHERE id = 4 ;
+
+UPDATE customers 
+SET last_name = 'Wilson'
+WHERE id = 4;
+
+```
+
+```sql
+
+SELECT * FROM customers;
+
+```
+
+| id   |	first_name  | last_name  |
+|------|--------------|------------|
+| 2	   | Randy  | Newman   |
+| 3	   | Paul   |	   Newman |
+| 4       | Stacey | Wilson  |
+
+```sql
+SELECT * FROM audit;
+```
+
+|        id   |   	    entry_date 	           |   inserted_by  |  action    |
+|---------------|--------------------------------|----------------|--------------|
+|   1	            | 2025-03-30 12:36:07.766638+01  |	       |  |
+|   2	          | 2025-03-30 12:38:14.842566+01 |      |   |
+|   3	         |  2025-03-30 12:40:38.022225+01 |   	postgres |  |
+| 4	|  2025-04-07 17:06:40.698657+01 	| postgres |	Added  |
+| 1	| 2025-04-07 17:07:13.054073+01 	| postgres |	Deleted |
+| 4	| 2025-04-07 17:08:46.318067+01 	| postgres |	Changed first_name from Steve to Stacey |
+| 4	| 2025-04-07 17:09:33.108531+01 	| postgres |	Changed last_name from Martin to Wilson |
+
+
+
 
