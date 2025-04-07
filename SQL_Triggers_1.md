@@ -60,7 +60,7 @@ SELECT * FROM customers;
 
 ```sql
 
-SELECT * from audit;
+SELECT * FROM audit;
 
 ```
 
@@ -129,9 +129,9 @@ The audit table can be modified further to create logs for added, deleted and up
 To avoid any overlap in triggers,  the previous trigger and function are removed.
 
 ```sql
-drop trigger trigger_example1 on customers; 
+DROP TRIGGER trigger_example1 on customers; 
 
-drop function auditlog();
+DROP FUNCTION auditlog();
 
 ```
 
@@ -159,7 +159,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE or replace TRIGGER audit_ins_trig
+CREATE OR REPLACE TRIGGER audit_ins_trig
     AFTER INSERT ON customers
     FOR EACH ROW
     EXECUTE FUNCTION audit_insert_function();
@@ -181,7 +181,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE or replace TRIGGER audit_del_trig
+CREATE OR REPLACE TRIGGER audit_del_trig
     AFTER DELETE ON customers
     FOR EACH ROW
     EXECUTE FUNCTION audit_delete_function();
@@ -212,7 +212,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE or replace TRIGGER audit_chg_trig
+CREATE OR REPLACE TRIGGER audit_chg_trig
     AFTER UPDATE ON customers
     FOR EACH ROW
     EXECUTE FUNCTION audit_change_function();
