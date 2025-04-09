@@ -42,7 +42,7 @@ The trigger can then be tested by inserting data into the customers table.
 ```sql
 
 INSERT INTO customers (id, first_name, last_name)
-VALUES (1,'Thomas', ‘Newman’);
+VALUES (1,'Thomas', 'Newman');
 
 INSERT INTO customers (id, first_name, last_name)
 VALUES (2,'Randy', 'Newman');
@@ -224,7 +224,7 @@ The new triggers can be tested with the following;
 ```sql
 
 INSERT INTO customers
-VALUES (4,’Steve’,’Martin');
+VALUES (4,'Steve','Martin');
 
 DELETE FROM customers 
 WHERE id = 1;
@@ -264,6 +264,68 @@ SELECT * FROM audit;
 | 1	| 2025-04-07 17:07:13+01 	| postgres |	Deleted |
 | 4	| 2025-04-07 17:08:46+01 	| postgres |	Changed first_name from Steve to Stacey |
 | 4	| 2025-04-07 17:09:33+01 	| postgres |	Changed last_name from Martin to Wilson |
+
+
+
+All of the above triggers are **after row-level triggers** meaning that the triggered function occurs after the trigger event occurs. 
+
+It is also possible to create triggers that iniate before the trigger event occurs, these are known as  **before row-level triggers**.
+
+The following is an example of a before row-level trigger.
+
+First a new example 'Employees' table is created, with basic employee details such as name and salary.
+
+```sql
+
+CREATE TABLE Employees (emp_id INT, 
+				first_name VARCHAR(20),
+				emp_last_name VARCHAR (20),
+				department_no INT,
+				salary INT, 
+				bonus INT);
+
+```
+
+Then a function is created to calculate the amount of bonus an employee is entitled to based on their department and salary.
+In this example all employees from department 2 are entitled to 25% of their salary as a bonus. This function is followed by a trigger which runs before any inserts into the Employees table.
+
+```sql
+
+CREATE OR REPLACE FUNCTION emp_bonus_function()
+RETURNS TRIGGER AS $$
+BEGIN
+    
+    IF NEW.department_no = 2 THEN
+       NEW.bonus := NEW.salary * 0.25;
+    END IF;
+    RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER emp_bonus_trig
+    BEFORE INSERT ON Employees
+    FOR EACH ROW
+    EXECUTE FUNCTION emp_bonus_function();
+
+```
+Now when data is inserted into the Employees table, the bonuses are calculated for the rows with department number 2.
+
+```sql
+
+INSERT INTO Employees 
+VALUES (1,'Mary', 'Adams', 2 , 35000, null),
+ (2, 'Barbara', 'Matthews', 1, 40000, null ),
+(3, 'Tony', 'Thomas', 2, 30000, null);
+
+SELECT * FROM Employees;
+```
+| emp_id  |	first_name  |	 emp_last_name  |	department_no  |   salary  |	bonus  |
+|---------|-----------------|-------------------|-----------------|-----------|-------|
+|1	| Mary  | Adams  |	2	| 35000 |	8750 |
+|2	 | Barbara |	Matthews |	1 |  40000 |	|
+|3	| Tony | Thomas |	2 | 30000 |	7500 |
+
+
 
 
 
