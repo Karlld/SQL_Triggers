@@ -12,7 +12,7 @@ CREATE SCHEMA trigger_practice;
 
 CREATE TABLE customers (id INT, first_name VARCHAR(255), last_name VARCHAR (255));
 
-CREATE TABLE audit ( id INT, entry_date VARCHAR(255));
+CREATE TABLE audit ( id INT, entry_date datetime);
 
 ```
 
@@ -135,11 +135,11 @@ DROP FUNCTION auditlog();
 
 ```
 
-An extre column is also added to the audit table, which will log the action details of each entry e.g.  ‘deleted’.
+An extra column is also added to the audit table, which will log the action details of each entry e.g.  ‘deleted’.
 
 ```sql
-ALTER TABLE table_name
-ADD column_name datatype;
+ALTER TABLE audit
+ADD action varchar(255);
 ```
 
 
